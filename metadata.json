@@ -1,0 +1,6 @@
+{
+  "name": "Estudiantes al Centro - Plataforma Provincial (Res. 124)",
+  "description": "Plataforma institucional y sistema de gestión electoral para Centros de Estudiantes de Córdoba (Res. 124), con libro de actas, finanzas con profesor asesor, padrón con tokens únicos y urna digital para comicios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

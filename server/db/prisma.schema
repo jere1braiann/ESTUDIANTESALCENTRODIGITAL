@@ -1,0 +1,259 @@
+// ==============================================================================
+// PRISMA SCHEMA - "ESTUDIANTES AL CENTRO" (PROVINCIA DE CÓRDOBA)
+// Aligned with Resolución Ministerial Nº 124/2010
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN_CD
+  ADMIN_JUNTA
+}
+
+enum SchoolStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NewsStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ElectionStatus {
+  DRAFT
+  ENROLLMENT_OPEN
+  LISTS_OFFICIALIZED
+  VOTING_OPEN
+  VOTING_CLOSED
+  SCRUTINY_COMPLETED
+  PROCLAIMED
+}
+
+enum FinanceType {
+  INGRESO
+  EGRESO
+}
+
+model School {
+  id                  String            @id @default(uuid())
+  cue                 String            @unique
+  name                String
+  department          String
+  city                String
+  status              SchoolStatus      @default(PENDING)
+  advisorTeacherName  String?
+  advisorTeacherEmail String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  users               User[]
+  elections           ElectionProcess[]
+  students            StudentPadron[]
+  minutes             MinuteActa[]
+  finances            FinanceEntry[]
+  news                NewsPost[]
+  auditLogs           AuditLog[]
+}
+
+model User {
+  id           String    @id @default(uuid())
+  schoolId     String?
+  school       School?   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  username     String    @unique
+  passwordHash String
+  fullName     String
+  email        String    @unique
+  role         Role
+  expiresAt    DateTime? // Art. 35: Caducidad automática de la Junta al proclamar
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model ElectionProcess {
+  id              String          @id @default(uuid())
+  schoolId        String
+  school          School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  year            Int
+  title           String
+  status          ElectionStatus  @default(DRAFT)
+  electionDate    DateTime
+  votingStartTime String          @default("08:00")
+  votingEndTime   String          @default("16:00")
+  juntaDisolved   Boolean         @default(false)
+  disolvedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  juntaMembers    JuntaMember[]
+  studentsPadron  StudentPadron[]
+  electoralLists  ElectoralList[]
+  anonymousVotes  AnonymousVote[]
+
+  @@unique([schoolId, year])
+}
+
+model JuntaMember {
+  id          String          @id @default(uuid())
+  electionId  String
+  election    ElectionProcess @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  dni         String
+  fullName    String
+  yearOfStudy Int             // Art. 25: 5to, 6to o 7mo año
+  division    String
+  roleInJunta String
+  createdAt   DateTime        @default(now())
+}
+
+model StudentPadron {
+  id          String          @id @default(uuid())
+  schoolId    String
+  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  electionId  String
+  election    ElectionProcess @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  dni         String
+  fullName    String
+  yearOfStudy Int
+  division    String
+  shift       String          @default("Mañana")
+  isRegular   Boolean         @default(true)
+  hasVoted    Boolean         @default(false)
+  votedAt     DateTime?
+  token       VotingToken?
+  createdAt   DateTime        @default(now())
+
+  @@unique([electionId, dni])
+}
+
+model VotingToken {
+  id             String        @id @default(uuid())
+  studentId      String        @unique
+  student        StudentPadron @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tokenHash      String
+  tokenRawMasked String
+  isUsed         Boolean       @default(false)
+  usedAt         DateTime?
+  createdAt      DateTime      @default(now())
+}
+
+model ElectoralList {
+  id               String          @id @default(uuid())
+  electionId       String
+  election         ElectionProcess @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  listNumber       Int
+  listName         String
+  colorHex         String          @default("#1E40AF")
+  motto            String?
+  presidentName    String
+  presidentYear    Int
+  vicePresidentName String
+  vicePresidentYear Int
+  endorserCount    Int             @default(0) // Art. 28: 10% de avales
+  isOfficialized   Boolean         @default(false)
+  officializedAt   DateTime?
+  candidates       Candidate[]
+  votesReceived    AnonymousVote[]
+  createdAt        DateTime        @default(now())
+
+  @@unique([electionId, listNumber])
+}
+
+model Candidate {
+  id           String        @id @default(uuid())
+  listId       String
+  list         ElectoralList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  fullName     String
+  dni          String
+  yearOfStudy  Int
+  division     String
+  position     String
+  isSubstitute Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+}
+
+model AnonymousVote {
+  id          String          @id @default(uuid())
+  electionId  String
+  election    ElectionProcess @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  listId      String?
+  list        ElectoralList?  @relation(fields: [listId], references: [id], onDelete: SetNull)
+  receiptHash String          @unique
+  createdAt   DateTime        @default(now())
+}
+
+model MinuteActa {
+  id                     String   @id @default(uuid())
+  schoolId               String
+  school                 School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  actNumber              Int
+  title                  String
+  type                   String
+  date                   DateTime
+  location               String   @default("Establecimiento Escolar")
+  attendeesCount         Int
+  quorumReached          Boolean  @default(true)
+  agendaTopics           String
+  content                String
+  resolutions            String
+  signedByPresident      Boolean  @default(true)
+  signedByActasSecretary Boolean  @default(true)
+  signedByAdvisorTeacher Boolean  @default(false)
+  createdAt              DateTime @default(now())
+
+  @@unique([schoolId, actNumber])
+}
+
+model FinanceEntry {
+  id                String      @id @default(uuid())
+  schoolId          String
+  school            School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  type              FinanceType
+  category          String
+  amount            Decimal     @db.Decimal(12, 2)
+  description       String
+  date              DateTime
+  receiptNumber     String?
+  registeredBy      String
+  advisorApproved   Boolean     @default(false) // Art. 20 y 41: Visto bueno del Profesor Asesor
+  advisorApprovedAt DateTime?
+  createdAt         DateTime    @default(now())
+}
+
+model NewsPost {
+  id                 String     @id @default(uuid())
+  schoolId           String?
+  school             School?    @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  authorName         String
+  title              String
+  summary            String
+  content            String
+  category           String
+  status             NewsStatus @default(PENDING)
+  isPinned           Boolean    @default(false)
+  isProvincialNotice Boolean    @default(false)
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  createdAt          DateTime   @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userRole  String?
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
