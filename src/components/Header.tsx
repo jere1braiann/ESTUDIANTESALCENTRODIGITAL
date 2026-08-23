@@ -154,15 +154,10 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* Private Portal */}
+          {/* Private Portal / Guest Portal */}
           <button
             id="nav-portal-tab"
-            onClick={() => {
-              if (!currentUser && usersList.length > 0) {
-                setCurrentUser(usersList[0]);
-              }
-              setCurrentView('portal');
-            }}
+            onClick={() => setCurrentView('portal')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
               currentView === 'portal'
                 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs'
@@ -170,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            <span>Portal de Gestión</span>
+            <span>Portal del Estudiante</span>
           </button>
         </nav>
 
@@ -197,15 +192,11 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           ) : (
             <button
-              onClick={() => {
-                if (usersList.length > 0) {
-                  setCurrentUser(usersList[0]);
-                  setCurrentView('portal');
-                }
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3 py-2 rounded-lg transition"
+              onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3 py-2 rounded-lg transition shadow-sm"
             >
               Iniciar Sesión
+              <ChevronDown className="w-3 h-3 opacity-80" />
             </button>
           )}
 

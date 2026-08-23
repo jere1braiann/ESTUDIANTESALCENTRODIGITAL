@@ -22,6 +22,7 @@ import { AdminCDPortal } from './components/AdminCDPortal';
 import { AdminJuntaPortal } from './components/AdminJuntaPortal';
 import { BiomboVotingModule } from './components/BiomboVotingModule';
 import { ArchitectureDocsModal } from './components/ArchitectureDocsModal';
+import { GuestPortal } from './components/GuestPortal';
 import { AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -64,10 +65,6 @@ export default function App() {
       if (usersRes?.success) {
         const userList = usersRes.users || usersRes.data || [];
         setUsers(userList);
-        if (!currentUser && userList.length > 0) {
-          // Set SuperAdmin or default active user
-          setCurrentUser(userList[0]);
-        }
       }
 
       // Fetch CD data
@@ -564,21 +561,14 @@ export default function App() {
         {currentView === 'portal' && (
           <div>
             {!currentUser ? (
-              <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 max-w-md mx-auto shadow-sm space-y-4">
-                <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
-                <h3 className="text-xl font-bold text-slate-900">Seleccioná un perfil de usuario</h3>
-                <p className="text-xs text-slate-500">
-                  Hacé clic en el selector de la barra superior para cambiar entre SuperAdmin Provincial, Centro de Estudiantes (Admin CD) o Junta Electoral (Admin Junta).
-                </p>
-                <button
-                  onClick={() => {
-                    if (users.length > 0) setCurrentUser(users[0]);
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl"
-                >
-                  Ingresar como SuperAdmin
-                </button>
-              </div>
+              <GuestPortal
+                school={activeSchool}
+                newsList={news}
+                actasList={actas}
+                financesList={finances}
+                election={election}
+                lists={lists}
+              />
             ) : currentUser.role === Role.SUPERADMIN ? (
               <SuperAdminPortal
                 schoolsList={schools}
