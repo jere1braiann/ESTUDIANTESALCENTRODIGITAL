@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "cd client && npm install && npm run build",
-    "start": "node server/dist/index.js",
+    "dev": "tsx server/index.ts",
+    "build": "vite build", 
+    "start": "node server/index.js",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
