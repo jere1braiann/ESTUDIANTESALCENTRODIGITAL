@@ -5,7 +5,8 @@ import { apiRouter } from './server/routes/apiRouter.js';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  // CAMBIO AQUÍ: Usar process.env.PORT para Azure
+  const PORT = process.env.PORT || 3000;
 
   // Global Middlewares
   app.use(express.json());
@@ -34,7 +35,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`[Estudiantes al Centro] Server running on http://0.0.0.0:${PORT}`);
   });
 }
