@@ -48,6 +48,7 @@ export interface User {
   fullName: string;
   email: string;
   role: Role;
+  password?: string;
   expiresAt?: string | null;
   isActive: boolean;
   isJuntaDisolved?: boolean;

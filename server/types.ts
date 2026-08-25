@@ -60,6 +60,7 @@ export interface User {
   fullName: string;
   email: string;
   role: Role;
+  password?: string;
   expiresAt?: string | null; // For ADMIN_JUNTA auto-expiration (Res. 124 Art. 35)
   isActive: boolean;
   createdAt: string;

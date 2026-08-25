@@ -13,15 +13,11 @@ export const apiRouter = Router();
 // 1. AUTHENTICATION & USERS
 // ==========================================
 apiRouter.post('/auth/login', (req, res) => {
-  const { username, role } = req.body;
+  const { username, password } = req.body;
   let user = db.users.find(u => u.username === username);
 
-  if (!user && role) {
-    user = db.users.find(u => u.role === role);
-  }
-
-  if (!user) {
-    user = db.users[0];
+  if (!user || user.password !== password) {
+    return res.status(401).json({ success: false, message: 'Usuario o contraseña incorrectos' });
   }
 
   const school = db.schools.find(s => s.id === user?.schoolId);
@@ -47,10 +43,11 @@ apiRouter.post('/auth/login', (req, res) => {
 
 apiRouter.get(['/auth/users', '/superadmin/users'], (req, res) => {
   const usersWithSchools = db.users.map(u => {
+    const { password, ...userWithoutPassword } = u;
     const s = db.schools.find(school => school.id === u.schoolId);
     const election = db.elections.find(e => e.schoolId === u.schoolId);
     return {
-      ...u,
+      ...userWithoutPassword,
       schoolName: s?.name || 'Gobierno de la Provincia de Córdoba',
       isJuntaDisolved: u.role === Role.ADMIN_JUNTA && election ? election.juntaDisolved : false,
     };

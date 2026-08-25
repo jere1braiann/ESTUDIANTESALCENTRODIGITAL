@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Role, User } from '../types';
+import { LoginModal } from './LoginModal';
 import {
   Vote,
   Shield,
@@ -31,7 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
   usersList = [],
   onOpenArchitecture,
 }) => {
-  const [roleDropdownOpen, setRoleDropdownOpen] = React.useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const getRoleBadge = (role: Role) => {
     switch (role) {
@@ -192,78 +194,47 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           ) : (
             <button
-              onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+              onClick={() => setShowLoginModal(true)}
               className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3 py-2 rounded-lg transition shadow-sm"
             >
               Iniciar Sesión
-              <ChevronDown className="w-3 h-3 opacity-80" />
             </button>
           )}
 
-          {/* Role selector dropdown */}
-          {roleDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2">
+          {/* User selector dropdown / Logout */}
+          {roleDropdownOpen && currentUser && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-2 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                Seleccionar Rol / Perfil Demo:
+                Opciones de Cuenta
               </div>
 
-              <div className="mt-1 space-y-1">
-                {usersList.map(user => {
-                  const info = getRoleBadge(user.role);
-                  const isSelected = currentUser?.id === user.id;
-
-                  return (
-                    <button
-                      key={user.id}
-                      onClick={() => {
-                        setCurrentUser(user);
-                        setRoleDropdownOpen(false);
-                        setCurrentView('portal');
-                      }}
-                      className={`w-full text-left p-2 rounded-lg flex items-start gap-2.5 transition text-xs ${
-                        isSelected
-                          ? 'bg-slate-100 border border-slate-300 font-semibold'
-                          : 'hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      <div className={`p-1.5 rounded-md ${info.color} mt-0.5`}>
-                        {info.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-slate-900 flex items-center justify-between">
-                          <span>{info.label}</span>
-                          {user.isJuntaDisolved && (
-                            <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-mono font-normal">
-                              DISUELTA
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-slate-500 text-[11px] truncate">{user.fullName}</div>
-                        <div className="text-slate-400 text-[10px] truncate">{user.schoolName}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between px-2 text-[11px] text-slate-500">
-                <span>Res. 124/10 RBAC</span>
+              <div className="mt-2 pt-1 flex flex-col gap-1 px-2 text-[11px] text-slate-500">
                 <button
                   onClick={() => {
                     setCurrentUser(null);
                     setRoleDropdownOpen(false);
                     setCurrentView('public');
                   }}
-                  className="text-red-600 hover:text-red-700 flex items-center gap-1 font-medium"
+                  className="w-full text-left bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg flex items-center gap-2 font-medium transition"
                 >
-                  <LogOut className="w-3 h-3" />
-                  Cerrar
+                  <LogOut className="w-4 h-4" />
+                  Cerrar Sesión
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
+      
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setShowLoginModal(false);
+          setCurrentView('portal');
+        }}
+      />
     </header>
   );
 };
